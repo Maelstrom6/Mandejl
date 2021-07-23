@@ -53,7 +53,10 @@ Run some functions just before going to post-processing.
 This includes mirroring, scaling and transposing.
 """
 function pre_post_processing!(img::Array{<:Any,2}, settings::Settings)
-    img = img ./ maximum(img)
+    m = maximum(img)
+    if m > 0
+        img = img ./ m
+    end
 
     if settings.mirror_x
         img = img + reverse(img, dims=2)
@@ -66,7 +69,10 @@ function pre_post_processing!(img::Array{<:Any,2}, settings::Settings)
 end
 
 function pre_post_processing!(img::Array{<:Any,3}, settings::Settings)
-    img = img ./ maximum(img)
+    m = maximum(img)
+    if m > 0
+        img = img ./ m
+    end
 
     if settings.mirror_x
         img = img + reverse(img, dims=2)
@@ -91,6 +97,40 @@ function create_image(settings::Settings)
     for (i, block) in enumerate(blocks)
         println("Block $i of $(length(blocks)). $block")
         @cuda threads=block[4] blocks=block[3] kernel!(img, block[1], block[2])
+    end
+    img = Array(img)
+
+    pre_post_processing!(img, settings)
+end
+
+function create_image2(settings::Settings)
+    blocks = identify_blocks(settings)
+    kernel! = factories2[settings.type]
+
+    if settings.type in [:mand, :final]
+        img = CUDA.zeros(settings.data_type, (settings.width, settings.height))
+    else
+        img = CUDA.zeros(settings.data_type, (settings.width, settings.height, 3))
+    end
+
+    width = settings.width
+    height = settings.height
+    left = settings.left
+    right = settings.right
+    top = settings.top
+    bottom = settings.bottom
+    maxiter = settings.maxiter
+    threshold = settings.threshold
+    z0 = settings.z0
+    fn = settings.fn
+    transform = settings.transform
+    inv_transform = settings.inv_transform
+
+    for (i, block) in enumerate(blocks)
+        println("Block $i of $(length(blocks)). $block")
+        @cuda threads=block[4] blocks=block[3] kernel!(img, block[1], block[2], width, height, left, right, top,
+        bottom, maxiter, threshold, z0, fn,
+        transform, inv_transform)
     end
     img = Array(img)
 

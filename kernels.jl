@@ -173,4 +173,136 @@ function mandelbrot_factory(width, height, left, right, top,
     end
 end
 
-factories = Dict(:mand => mandelbrot_factory, :buddha => buddha_factory)
+return function buddha!(data, offset_x, offset_y, width, height, left, right, top,
+    bottom, maxiter, threshold, z0, fn,
+    transform=identity, inv_transform=identity)
+
+    pixel2point = pixel2point_wrapper(width, height, left, right, top, bottom)
+    point2pixel = point2pixel_wrapper(width, height, left, right, top, bottom)
+    id_x, id_y = identify_ids(offset_x, offset_y)
+    c = transform(pixel2point(id_x, id_y))
+
+    escaped = false
+
+    # cycle detection algorithm initial values
+    check_step = 1
+    epsilon = (right - left) / 1000000000  # scales as you zoom in
+    zn_cycle = c
+
+    if is_in_main_bulb(c)
+        return nothing
+    end
+
+    zn = z0
+    zn = fn(zn, c)  # iterate once so we don't add to visited_coords for no reason
+
+    # First loop to determine if part of the set
+    for i in 1:maxiter
+        zn = fn(zn, c)
+
+        # finite iteration algorithm
+        if abs2(zn) > threshold ^ 2
+            escaped = true
+            break
+        end
+
+        # cycle detection algorithm
+        if i > check_step
+            if abs2(zn - zn_cycle) < epsilon ^ 2
+                break
+            end
+            if i == check_step * 2
+                check_step *= 2
+                zn_cycle = zn
+            end
+        end
+    end
+
+    if !escaped
+        return nothing
+    end
+
+    # Second loops to record the orbit of the escapees
+    zn = z0
+    zn = fn(zn, c)  # iterate once so we don't add to visited_coords for no reason
+
+    for i in 1:maxiter
+        zn = fn(zn, c)
+
+        coord = inv_transform(zn)
+        x_pixel, y_pixel = point2pixel(coord)
+        if (1 <= y_pixel <= height) && (1 <= x_pixel <= width)
+            if i <= 10
+                data[x_pixel, y_pixel, 3] += 1
+            end
+            if i <= 100
+                data[x_pixel, y_pixel, 2] += 1
+            end
+            data[x_pixel, y_pixel, 1] += 1
+        end
+
+        # the finite iteration algorithm
+        if abs2(zn) > threshold ^ 2
+            break
+        end
+    end
+    return nothing
+end
+
+function mandelbrot!(data, offset_x, offset_y,width, height, left, right, top,
+    bottom, maxiter, threshold, z0, fn,
+    transform::Function=identity, inv_transform::Function=identity)
+    pixel2point = pixel2point_wrapper(width, height, left, right, top, bottom)
+    id_x, id_y = identify_ids(offset_x, offset_y)
+    c = transform(pixel2point(id_x, id_y))
+
+    escaped = false
+
+    # cycle detection algorithm initial values
+    check_step = 1
+    epsilon = (right - left) / 1000000000  # scales as you zoom in
+    zn_cycle = c
+
+    zn = z0
+    zn = fn(zn, c)  # iterate once so we don't add to visited_coords for no reason
+
+    for i in 1:maxiter
+        zn = fn(zn, c)
+
+        # finite iteration algorithm
+        if abs2(zn) > threshold ^ 2
+            escaped = true
+            # the smoothing factor
+            nu = CUDA.log2(CUDA.log2(abs(zn)))
+            data[id_x, id_y] = i - nu
+            break
+        end
+
+        # cycle detection algorithm
+        if i > check_step
+            if abs2(zn - zn_cycle) < epsilon ^ 2
+                break
+            end
+            if i == check_step * 2
+                check_step *= 2
+                zn_cycle = zn
+            end
+        end
+    end
+
+    if !escaped
+        data[id_x, id_y] = maxiter
+    end
+    return nothing
+end
+
+
+factories = Dict(
+    :mand => mandelbrot_factory,
+    :buddha => buddha_factory,
+)
+
+factories2 = Dict(
+    :mand => mandelbrot!,
+    :buddha => buddha!,
+)

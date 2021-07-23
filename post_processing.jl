@@ -10,12 +10,12 @@ end
 
 function colour(img::Array{<:Any,2}, settings::Settings)
     n = settings.maxiter
-    black = RGB(zero(eltype(img)), zero(eltype(img)), zero(eltype(img)))
+    black = RGB{N0f8}(zero(eltype(img)), zero(eltype(img)), zero(eltype(img)))
     function scheme1(pixel)
         if pixel == 1
             return black
         else
-            return RGB(
+            return RGB{N0f8}(
                 (sin(n*pixel / 24) * 100 + 150)/255,
                 (sin(n*pixel / 12) * 100 + 150)/255,
                 (cos(n*pixel / 24) * 100 + 150)/255,
@@ -27,7 +27,7 @@ end
 
 function colour(img::Array{<:Any,3}, settings::Settings)
     function scheme1(pixel)
-        return RGB(
+        return RGB{N0f8}(
                 sqrt(pixel[1]),
                 sqrt(pixel[2]),
                 sqrt(pixel[3]),
