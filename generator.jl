@@ -53,32 +53,32 @@ Run some functions just before going to post-processing.
 This includes mirroring, scaling and transposing.
 """
 function pre_post_processing!(img::Array{<:Any,2}, settings::Settings)
-    m = maximum(img)
-    if m > 0
-        img = img ./ m
-    end
-
     if settings.mirror_x
         img = img + reverse(img, dims=2)
     end
     if settings.mirror_y
         img = img + reverse(img, dims=1)
+    end
+
+    m = maximum(img)
+    if m > 0
+        img = img ./ m
     end
 
     return permutedims(img, [2, 1])
 end
 
 function pre_post_processing!(img::Array{<:Any,3}, settings::Settings)
-    m = maximum(img)
-    if m > 0
-        img = img ./ m
-    end
-
     if settings.mirror_x
         img = img + reverse(img, dims=2)
     end
     if settings.mirror_y
         img = img + reverse(img, dims=1)
+    end
+
+    m = maximum(img)
+    if m > 0
+        img = img ./ m
     end
 
     return permutedims(img, [2, 1, 3])

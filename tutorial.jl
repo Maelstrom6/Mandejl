@@ -67,3 +67,5 @@ function bench_gpu3!(y, x)
     end
 end
 @btime bench_gpu3!($y_d, $x_d)
+
+sin(1+im)
