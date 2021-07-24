@@ -26,27 +26,6 @@ function identify_blocks(settings::Settings)
     return blocks
 end
 
-function compile_kernel(settings::Settings)
-    width = settings.width
-    height = settings.height
-    left = settings.left
-    right = settings.right
-    top = settings.top
-    bottom = settings.bottom
-    maxiter = settings.maxiter
-    threshold = settings.threshold
-    z0 = settings.z0
-    fn = settings.fn
-    transform = settings.transform
-    inv_transform = settings.inv_transform
-
-    return factories[settings.type](
-        width, height, left, right, top,
-        bottom, maxiter, threshold, z0, fn,
-        transform, inv_transform,
-    )
-end
-
 """
 Run some functions just before going to post-processing.
 
@@ -85,34 +64,6 @@ function pre_post_processing!(img::Array{<:Any,3}, settings::Settings)
 end
 
 function create_image(settings::Settings)
-    blocks = identify_blocks(settings)
-    kernel! = compile_kernel(settings)
-
-    if settings.type in [:mand]
-        img = CUDA.zeros(settings.data_type, (settings.width, settings.height))
-    else
-        img = CUDA.zeros(settings.data_type, (settings.width, settings.height, 3))
-    end
-
-    for (i, block) in enumerate(blocks)
-        println("Block $i of $(length(blocks)). $block")
-        @cuda threads=block[4] blocks=block[3] kernel!(img, block[1], block[2])
-    end
-    img = Array(img)
-
-    pre_post_processing!(img, settings)
-end
-
-function create_image2(settings::Settings)
-    blocks = identify_blocks(settings)
-    kernel! = factories2[settings.type]
-
-    if settings.type in [:mand, :final]
-        img = CUDA.zeros(settings.data_type, (settings.width, settings.height))
-    else
-        img = CUDA.zeros(settings.data_type, (settings.width, settings.height, 3))
-    end
-
     width = settings.width
     height = settings.height
     left = settings.left
@@ -126,9 +77,18 @@ function create_image2(settings::Settings)
     transform = settings.transform
     inv_transform = settings.inv_transform
 
+    blocks = identify_blocks(settings)
+
+    if settings.type in [:mand]
+        img = CUDA.zeros(settings.data_type, (settings.width, settings.height))
+    else
+        img = CUDA.zeros(settings.data_type, (settings.width, settings.height, 3))
+    end
+
+    kernel! = kernels[settings.type]
     for (i, block) in enumerate(blocks)
-        println("Block $i of $(length(blocks)). $block")
-        @cuda threads=block[4] blocks=block[3] kernel!(img, block[1], block[2], width, height, left, right, top,
+        @cuda threads=block[4] blocks=block[3] kernel!(img, block[1], block[2],
+        width, height, left, right, top,
         bottom, maxiter, threshold, z0, fn,
         transform, inv_transform)
     end
