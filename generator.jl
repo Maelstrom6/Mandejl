@@ -44,6 +44,7 @@ function pre_post_processing!(img::Array{<:Any,2}, settings::Settings)
         img = img ./ m
     end
 
+    img[.!(isfinite.(img))] .= zero(eltype(img))
     return permutedims(img, [2, 1])
 end
 
@@ -60,6 +61,7 @@ function pre_post_processing!(img::Array{<:Any,3}, settings::Settings)
         img = img ./ m
     end
 
+    img[.!(isfinite.(img))] .= zero(eltype(img))
     return permutedims(img, [2, 1, 3])
 end
 
