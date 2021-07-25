@@ -1,11 +1,25 @@
-function remove_horizontal_pixels(img::Array{Any,2})
-    width, height = size(img)
-    img = vcat(img[1:(fld(height, 2)-1), :], img[(fld(height, 2)+1):height, :])
+function remove_horizontal_pixels(img::Array{<:Any,2})
+    height, width = size(img)
+    img = vcat(img[1:(fld(height, 2)-1), :], img[(cld(height, 2)+2):height, :])
 end
 
-function remove_vertical_pixels(img::Array{Any,2})
-    width, height = size(img)
-    img = hcat(img[:, 1:(fld(width, 2)-1)], img[:, (fld(width, 2)+1):width])
+function remove_vertical_pixels(img::Array{<:Any,2})
+    height, width = size(img)
+    img = hcat(img[:, 1:(fld(width, 2)-1)], img[:, (cld(width, 2)+2):width])
+end
+
+function remove_horizontal_pixels(img::Array{<:Any,3})
+    height, width, depth = size(img)
+    img = vcat(img[1:(fld(height, 2)-1), :, :], img[(cld(height, 2)+2):height, :, :])
+end
+
+function remove_vertical_pixels(img::Array{<:Any,3})
+    height, width, depth = size(img)
+    img = hcat(img[:, 1:(fld(width, 2)-1), :], img[:, (cld(width, 2)+2):width, :])
+end
+
+function blur(img::Matrix{RGB{N0f8}}, radius=1)
+    return imfilter(img, Kernel.gaussian(radius))
 end
 
 function colour(img::Array{<:Any,2}, settings::Settings)

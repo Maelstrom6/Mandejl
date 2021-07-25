@@ -79,7 +79,7 @@ function create_image(settings::Settings)
 
     blocks = identify_blocks(settings)
 
-    if settings.type in [:mand]
+    if settings.type in [:mand, :orbit_x, :orbit_o, :orbit_dot]
         img = CUDA.zeros(settings.data_type, (settings.width, settings.height))
     else
         img = CUDA.zeros(settings.data_type, (settings.width, settings.height, 3))
@@ -87,7 +87,7 @@ function create_image(settings::Settings)
 
     kernel! = kernels[settings.type]
     for (i, block) in enumerate(blocks)
-        @cuda threads=block[4] blocks=block[3] kernel!(img, block[1], block[2],
+        @cuda blocks=block[3] threads=block[4] kernel!(img, block[1], block[2],
         width, height, left, right, top,
         bottom, maxiter, threshold, z0, fn,
         transform, inv_transform)

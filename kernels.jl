@@ -26,6 +26,9 @@ function is_in_main_bulb(c::ComplexF64)
 end
 
 function identify_ids(offset_x, offset_y)
+    # index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    # id_x = fld(index-1, width) + 1
+    # id_y = (index-1) % width + 1
     id_x = blockIdx().x + offset_x
     id_y = threadIdx().x + offset_y
     return id_x, id_y
@@ -52,7 +55,6 @@ return function buddha!(data, offset_x, offset_y, width, height, left, right, to
     end
 
     zn = z0
-    zn = fn(zn, c)  # iterate once so we don't add to visited_coords for no reason
 
     # First loop to determine if part of the set
     for i in 1:maxiter
@@ -107,7 +109,7 @@ return function buddha!(data, offset_x, offset_y, width, height, left, right, to
     return nothing
 end
 
-function mandelbrot!(data, offset_x, offset_y,width, height, left, right, top,
+function mand!(data, offset_x, offset_y,width, height, left, right, top,
     bottom, maxiter, threshold, z0, fn,
     transform::Function=identity, inv_transform::Function=identity)
     pixel2point = pixel2point_wrapper(width, height, left, right, top, bottom)
@@ -127,7 +129,6 @@ function mandelbrot!(data, offset_x, offset_y,width, height, left, right, top,
     zn_cycle = c
 
     zn = z0
-    zn = fn(zn, c)  # iterate once so we don't add to visited_coords for no reason
 
     for i in 1:maxiter
         zn = fn(zn, c)
@@ -159,7 +160,100 @@ function mandelbrot!(data, offset_x, offset_y,width, height, left, right, top,
     return nothing
 end
 
+function orbit_x!(data, offset_x, offset_y,width, height, left, right, top,
+    bottom, maxiter, threshold, z0, fn,
+    transform::Function=identity, inv_transform::Function=identity)
+    pixel2point = pixel2point_wrapper(width, height, left, right, top, bottom)
+    id_x, id_y = identify_ids(offset_x, offset_y)
+    c = transform(pixel2point(id_x, id_y))
+
+    zn = zero(z0)
+    trap = z0
+    distance = 100000.0
+
+    for i in 1:maxiter
+        zn = fn(zn, c)
+
+        if abs2(zn) > threshold ^ 2
+            data[id_x, id_y] = i
+            break
+        end
+        hor_dist = abs(real(zn) - real(trap))
+        ver_dist = abs(imag(zn) - imag(trap))
+        if distance > hor_dist
+            distance = hor_dist
+        end
+        if distance > ver_dist
+            distance = ver_dist
+        end
+    end
+    data[id_x, id_y] = 100.0 * distance
+    return nothing
+end
+
+function orbit_o!(data, offset_x, offset_y,width, height, left, right, top,
+    bottom, maxiter, threshold, z0, fn,
+    transform::Function=identity, inv_transform::Function=identity)
+    pixel2point = pixel2point_wrapper(width, height, left, right, top, bottom)
+    id_x, id_y = identify_ids(offset_x, offset_y)
+    c = transform(pixel2point(id_x, id_y))
+
+    zn = zero(z0)
+    trap = z0
+    distance = 100000.0
+
+    min_acceptable_dist = 0.4
+    max_acceptable_dist = 0.5
+
+    for i in 1:maxiter
+        zn = fn(zn, c)
+
+        if abs2(zn) > threshold ^ 2
+            data[id_x, id_y] = i
+            break
+        end
+
+        point_dist = abs(zn - trap)
+        if (distance > point_dist) && (min_acceptable_dist < point_dist < max_acceptable_dist)
+            distance = point_dist
+        end
+    end
+    data[id_x, id_y] = 100.0 * distance
+    return nothing
+end
+
+function orbit_dot!(data, offset_x, offset_y,width, height, left, right, top,
+    bottom, maxiter, threshold, z0, fn,
+    transform::Function=identity, inv_transform::Function=identity)
+    pixel2point = pixel2point_wrapper(width, height, left, right, top, bottom)
+    id_x, id_y = identify_ids(offset_x, offset_y)
+    c = transform(pixel2point(id_x, id_y))
+
+    zn = zero(z0)
+    trap = z0
+    distance = 100000.0
+
+    for i in 1:maxiter
+        zn = fn(zn, c)
+
+        if abs2(zn) > threshold ^ 2
+            data[id_x, id_y] = i
+            break
+        end
+
+        point_dist = abs(zn - trap)
+        if distance > point_dist
+            distance = point_dist
+        end
+    end
+    data[id_x, id_y] = 100.0 * distance
+    return nothing
+end
+
 kernels = Dict(
-    :mand => mandelbrot!,
+    :mand => mand!,
     :buddha => buddha!,
+    :orbit_x => orbit_x!,
+    :orbit_o => orbit_o!,
+    :orbit_dot => orbit_dot!,
 )
