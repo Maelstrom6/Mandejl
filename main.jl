@@ -48,7 +48,7 @@ end
 settings = Settings(width=1920*2, height=1080*2, type=:buddha, left=-3., right=0.2, top=1.6, bottom=-1.6, fn=(zn, c) -> tan(zn)^2 + c, maxiter=1000, threshold=5.0, block_size=(50, 50), data_type=Float64)
 img = create_image(settings)
 img = colour(img, settings)
-save("x.png", img)
+save("y.png", img)
 
 for (name, settings) in presets
     println(name)
