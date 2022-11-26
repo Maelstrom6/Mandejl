@@ -1,6 +1,13 @@
+using Pkg
+Pkg.activate(".")
+Pkg.add(["Images"])
+Pkg.add("CUDA")
+Pkg.add("ImageView")
+Pkg.add("VideoIO")
+
+using Images
 using CUDA
 using ImageView
-using Images
 using VideoIO
 
 include("extensions.jl")
@@ -49,6 +56,12 @@ settings = Settings(width=1920*2, height=1080*2, type=:buddha, left=-3., right=0
 img = create_image(settings)
 img = colour(img, settings)
 save("y.png", img)
+
+settings = Settings(2000*4, 1000*4, -4, 4, 2, -2, 2000, 4, 0, (zn, c) -> zn^2 + c, z -> tan(asin(z))^2, z -> sin(atan(sqrt(z))), :buddha, (256, 256), true, true, Float64)
+# settings = Settings(width=1920*4, height=1080*4, type=:buddha, left=-2.0, right=1.4, top=1.6, bottom=-1.6, fn=(zn, c) -> zn^2 + c, maxiter=10000, threshold=5.0, block_size=(50, 50), data_type=Float32)
+img = create_image(settings)
+img = colour(img, settings)
+save("buddha.png", img)
 
 for (name, settings) in presets
     println(name)
