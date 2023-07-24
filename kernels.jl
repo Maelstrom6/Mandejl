@@ -92,10 +92,21 @@ function buddha!(data, offset_x, offset_y, width, height, left, right, top,
         coord = inv_transform(zn)
         x_pixel, y_pixel = point2pixel(coord)
         @inbounds if (1 <= y_pixel <= height) && (1 <= x_pixel <= width)
-            if i % 3 == 0
+            # @inline 
+            # if i % 3 == 0
+            #     data[x_pixel, y_pixel, 3] += 1
+            # end
+            # if i % 2 == 0
+            #     data[x_pixel, y_pixel, 2] += 1
+            # end
+            # data[x_pixel, y_pixel, 1] += 1
+            # if i % 5 == 0
+            #     data[x_pixel, y_pixel, 1] += 1
+            # end
+            if i < 10 #i % 3 == 0
                 data[x_pixel, y_pixel, 3] += 1
             end
-            if i % 2 == 0
+            if i < 100 #i % 2 == 0
                 data[x_pixel, y_pixel, 2] += 1
             end
             data[x_pixel, y_pixel, 1] += 1
