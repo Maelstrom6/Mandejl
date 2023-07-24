@@ -254,14 +254,22 @@ img = colour(arr, settings)
 save("mand12.png", img)
 
 
-settings = presets[:temple]
+settings = presets[:box]
 settings.type = :buddha
-settings.threshold = 2.
-settings.maxiter = 1000
-settings.width = 4000
-settings.height = 8000
+settings.threshold = 10.
+settings.maxiter = 10000
+settings.width = 8000
+settings.height = 4000
 # settings.colour_scheme = 3
 # settings.fn = (z, c) -> cos(z) + c'/(abs2(c)+0.01im)
 arr = create_image(settings)
 img = colour(arr, settings)
 save("mand13.png", img)
+settings.threshold = 10.
+settings.colour_scheme = 0
+arr = create_image(settings)
+img = colour(arr, settings)
+save("mand14.png", img)
+settings.colour_scheme = 0
+img = colour(arr, settings)
+save("mand15.png", img)
