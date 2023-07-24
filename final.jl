@@ -103,15 +103,17 @@ function inner_kernel!(i, data, x_pixel, y_pixel)
     end
     data[x_pixel, y_pixel, 1] += 1
 end
+# Set zoom to 1 and then 1.1
 function f()
     theta = pi/2
+    zoom = 1.1
     settings = Settings(
         width=1920,
         height=1080,
-        left=-1920/1080*(2. + 0.4sin(theta)),
-        right=1920/1080*(2. + 0.4sin(theta)),
-        top=(2. + 0.4cos(theta)),
-        bottom=-(2. + 0.4cos(theta)),
+        left=-1920/1080*(2. + 0.4sin(theta))*zoom,
+        right=1920/1080*(2. + 0.4sin(theta))*zoom,
+        top=(2. + 0.4cos(theta))*zoom,
+        bottom=-(2. + 0.4cos(theta))*zoom,
         maxiter=100_000,
         threshold=100.,
         transform=z -> tan(acos(z*exp(im*theta)))^2, 
@@ -139,7 +141,8 @@ function f()
     # )
     arr = create_image(settings)
     img = colour(arr, settings)
-    save("mand7.png", img)
+    #save("mand7.png", img)
+    return img
 end
 f()
 
@@ -154,8 +157,8 @@ function inner_kernel!(i, data, x_pixel, y_pixel)
     data[x_pixel, y_pixel, 1] += 1
 end
 settings = Settings(
-    width=1920*16,
-    height=1080*16,
+    width=1920*12,
+    height=1080*12,
     left=-1920/1080*2.4,
     right=1920/1080*2.4,
     top=2.,
@@ -167,7 +170,7 @@ settings = Settings(
     type=:buddha,
     mirror_x=true,
     mirror_y=true,
-    data_type=Float64,
+    data_type=Float32,
     colour_scheme=3,
 )
 arr = create_image(settings)
@@ -208,3 +211,57 @@ settings.colour_scheme = 3
 arr = create_image(settings)
 img = colour(arr, settings)
 save("mand9.png", img)
+
+
+
+
+settings = presets[:snow_globe]
+settings.type = :buddha
+settings.threshold = 4.
+settings.maxiter = 10000
+settings.width = 4000
+settings.height = 4000
+settings.colour_scheme = 3
+# settings.fn = (z, c) -> cos(z) + c'/(abs2(c)+0.01im)
+arr = create_image(settings)
+img = colour(arr, settings)
+save("mand10.png", img)
+
+
+settings = presets[:gates]
+settings.type = :buddha
+settings.threshold = 4.
+settings.maxiter = 10000
+settings.width = 4000
+settings.height = 4000
+# settings.colour_scheme = 3
+# settings.fn = (z, c) -> cos(z) + c'/(abs2(c)+0.01im)
+arr = create_image(settings)
+img = colour(arr, settings)
+save("mand11.png", img)
+
+
+settings = presets[:titan]
+settings.type = :buddha
+settings.threshold = 2.
+settings.maxiter = 1000
+settings.width = 4000
+settings.height = 8000
+# settings.colour_scheme = 3
+# settings.fn = (z, c) -> cos(z) + c'/(abs2(c)+0.01im)
+arr = create_image(settings)
+img = colour(arr, settings)
+save("mand12.png", img)
+
+
+settings = presets[:temple]
+settings.type = :buddha
+settings.threshold = 2.
+settings.maxiter = 1000
+settings.width = 4000
+settings.height = 8000
+# settings.colour_scheme = 3
+# settings.fn = (z, c) -> cos(z) + c'/(abs2(c)+0.01im)
+arr = create_image(settings)
+img = colour(arr, settings)
+save("mand13.png", img)
